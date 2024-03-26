@@ -1,0 +1,10 @@
+{
+    "require": {
+        "guzzlehttp/guzzle": "^7.8",
+        "phpoffice/phpexcel": "^1.8",
+        "league/csv": "^9.15"
+    },
+    "require-dev": {
+        "symfony/panther": "^2.1"
+    }
+}
