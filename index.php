@@ -4,12 +4,14 @@ require 'vendor/autoload.php';
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\CookieJar;
+use League\Csv\Writer;
 
 // Create a Guzzle client
 $client = new Client();
 
 // Specify the URL of the website you want to scrape
-$url = 'https://www.officesupply.com/office-supplies/paper-pads/copy-multi-paper/c200213.html';
+$category = 'pens-pencils';
+$url = 'https://www.officesupply.com/office-supplies/writing-correction/'.$category.'/c200236.html';
 
 // Set a user-agent header to mimic a real web browser
 $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36';
@@ -37,26 +39,33 @@ try {
 
         // Use XPath to locate elements containing product names
         $xpath = new DOMXPath($dom);
-        $productNodes = $xpath->query('//div[contains(@class, "jx-product-title")]//a');
+        $productNodes = $xpath->query('//div[contains(@class, "product-details")]');
 
-        // Open a CSV file for writing
-        $file = fopen('products.csv', 'w');
-
-        // Write the header row
-        fputcsv($file, ['Product Name']);
-
-        // Iterate over the product nodes and extract the product names
+        // Create a new CSV writer
+        $csvWriter = Writer::createFromPath($category.'.csv', 'w+');
+        // Write the header row including additional fields
+        $csvWriter->insertOne(['Product Name',  'Price', 'Category']);
+        $i = 0;
+        // Iterate over the product nodes and extract the desired data
         foreach ($productNodes as $node) {
-            $productName = $node->textContent;
-            // Write each product name to the CSV file
-            fputcsv($file, [$productName]);
+            // Extract product name
+            // var_dump($node);
+            // die();
+            $productNameNode = $xpath->query('//div[contains(@class,"jx-product-title")]//a')->item($i);
+            $productName = $productNameNode ? $productNameNode->textContent : '';
+
+            // Extract price (if available)
+            $priceNode = $xpath->query('//div[contains(@class,"cart-btn-container")]//span')->item($i);
+            // var_dump($priceNode);
+
+            $price = $priceNode ? $priceNode->textContent : '';
+            $categoryLoop =  $priceNode ? $category : '';
+            // Write all extracted data to the CSV file
+            $csvWriter->insertOne([$productName, $price, $categoryLoop]);
+            $i++;
         }
-
-        // Close the CSV file
-        fclose($file);
-
         // Success message
-        echo 'Data successfully scraped and saved to products.csv';
+        echo 'Data successfully scraped and saved to '.$category.'.csv';
     } else {
         echo 'Failed to fetch the page. Status code: ' . $response->getStatusCode();
     }
