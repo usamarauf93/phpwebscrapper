@@ -10,8 +10,8 @@ use League\Csv\Writer;
 $client = new Client();
 
 // Specify the URL of the website you want to scrape
-$category = 'markers-erase';
-$url = 'https://www.officesupply.com/office-supplies/writing-correction/'.$category.'/c200234.html';
+$category = 'writing-accessories';
+$url = 'https://www.officesupply.com/office-supplies/writing-correction/'.$category.'/c200237.html';
 
 // Set a user-agent header to mimic a real web browser
 $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36';
@@ -44,7 +44,7 @@ try {
         // Create a new CSV writer
         $csvWriter = Writer::createFromPath($category.'.csv', 'w+');
         // Write the header row including additional fields
-        $csvWriter->insertOne(['Product Name',  'Price', 'Image','Category']);
+        $csvWriter->insertOne(['Name',  'Price', 'Images','Categories']);
         $i = 0;
         // Iterate over the product nodes and extract the desired data
         foreach ($productNodes as $node) {
@@ -57,12 +57,12 @@ try {
             $priceNode = $xpath->query('//div[contains(@class,"cart-btn-container")]//span')->item($i);
             $price = $priceNode ? $priceNode->textContent : '';
             $categoryLoop =  $priceNode ? $category : '';
-
-            $imageNode = $xpath->query('.//img', $node)->item($i);
-            $imageUrl = $imageNode ? $imageNode->getAttribute('src') : '';
-        
+           
+            $imageNode = $xpath->query('//div[contains(@class, "product-img")]//a//img')->item($i);
+            $imageUrl = $imageNode ? $imageNode->getAttribute('src') : 'https://placehold.co/400';
+      
             // Write all extracted data to the CSV file
-            if(!empty($categoryLoop ))
+            if(!empty($categoryLoop) &&  !empty($productName)  )
                 $csvWriter->insertOne([$productName, $price,$imageUrl, $categoryLoop]);
             $i++;
         }
